@@ -1,8 +1,6 @@
 // v2: factor out `Rand`s to synthdef arguments
 
-// TODO: randomize
-// TODO: controlspecs?
-// TODO: mouse poll?
+// TODO: mouse poll/modulator?
 
 // assumption: Server.default is running
 (
@@ -71,6 +69,9 @@ server.waitForBoot { Routine {
 			controls[key] = 0;
 		});
 
+
+		/// FIXME: populate these controlspecs with appropriate ranges/warps,
+		/// store this spec structure outside of the voice creation function
 		specs = (
 			\speed: ControlSpec.new(0, 1),
 			\top: ControlSpec.new(0, 1),
@@ -97,8 +98,11 @@ server.waitForBoot { Routine {
 			\res_cutoff_mod_div: ControlSpec.new(0, 1),
 		);
 
+		/// FIXME: there might be a builtin sugar to flatten a Dictionary to a [k, v..] array?
 		args = List.new;
 		specs.keys.do({ |k|
+			// FIXME: would be better to `.map` a unit random variable to each spec;
+			/// this would respect the warp parameters
 			controls[k] = rrand(specs[k].minval, specs[k].maxval);
 			args.add(k.asSymbol);
 			args.add(controls[k]);
@@ -106,46 +110,6 @@ server.waitForBoot { Routine {
 		args = args.asArray;
 		synth = Synth.new(def.name, args, target);
 
-
-		/*
-		speed = rrand(50.0, 100);
-		top = 220 * 2 ** (rrand(0, 4.0));
-		step = rrand(50.0, 105.0);
-
-		gift_min = rrand(0.6, 1.2);
-		gift_max = rrand(0, 48.0);
-		gift_step = rrand(2.0, 6.0);
-
-		freq_min = rrand(2.0, 16.0);
-		freq_step = rrand(0, 1);
-
-		amp_noise_rate = rrand(0, 1);
-		amp_noise_mul = rrand(0, 1);
-		amp_noise_add = rrand(0, 1);
-
-		amp2_noise_rate = rrand(0, 1);
-		amp2_noise_mul = rrand(0, 1);
-
-		hpf_mod_lag = rrand(0, 1);
-		hpf_mod_mul = rrand(0, 1);
-		hpf_gift_mul = rrand(0, 1);
-
-		trig_div = rrand(0, 1);
-		trig2_div = rrand(0, 1);
-
-		rq_noise_rate = rrand(0, 1);
-		pulse_freq_mod = rrand(0, 1);
-
-		res_cutoff_base = rrand(0, 1);
-		res_cutoff_mod  = rrand(0, 1);
-		res_cutoff_mod_lag = rrand(0, 1);
-		res_cutoff_mod_div = rrand(0, 1);*/
-
-
-		/*	synth = synth_func.play(
-		// args: [...],
-		target:target);
-		synth*/
 	};
 
 	server.sync;
