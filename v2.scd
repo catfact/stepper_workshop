@@ -1,29 +1,62 @@
+// v2: factor out `Rand`s to synthdef arguments
+
+// TODO: controlspecs
+
 (
-f = {
+var synth_func;
+var rand_voice_func;
+
+synth_func = {
 	arg speed=50, top=1000, step=1,
-	gift_min=1, gift_max=10, gift_step=;
+	gift_min=1, gift_max=10, gift_step=1,
+	freq_min=1, freq_max=10, freq_step=1,
+	amp_noise_rate = 15, amp_noise_mul = 0.4, amp_noise_add=0.4,
+	amp2_noise_rate = 20, amp2_noise_mul = 0.6,
 
-	var sound,  freq,  rq,  amp,  gift,  sig,  trig,  trig2,  top,  filter,  amp2,  mod, cutoff;
+	trig_div=3, trig2_div = 4,
 
-	trig = Impulse.ar(speed/Rand(2, 8));
-	trig2 = Impulse.ar(speed/Rand(4, 16));
+	rq_noise_rate = 10,
+	pulse_freq_mod = 30,
 
-	gift = Stepper.ar(trig:trig2, min:gift_min, max:gift_max, gift_step);
-	freq = Stepper.ar(trig:trig, min:Rand(2, 16)*speed, max:top%speed, freq_step);
+	res_cutoff_base=2000, res_cutoff_mod = 4, res_cutoff_mod_lag=1, res_cutoff_mod_div=75;
 
-	amp = LFNoise0.kr(Rand(10,  24)-gift,  Rand(0.25, 0.55), Rand(0.25, 0.55));
-	amp2 = LFNoise0.kr(Rand(8, 32)-gift, Rand(0.4, 0.8));
-	rq = LFNoise0.kr(Rand(2, 24)-gift, 0.2,  0.2);
-	sound = Pulse.ar(freq-(gift*Rand(25, 50)))*amp;
+	var sound, freq, amp,  gift,  sig,  trig,  trig2, filter, amp2, mod, res_cutoff, rq, hpf;
 
-	cutoff = Rand(Rand(1100, 110), Rand(220, 880))+top+(gift*Rand(2, 6))-(Lag.ar(freq, Rand(0.02, 6))/Rand(50, 100));
-	filter = Resonz.ar(sound, cutoff, rq);
+	trig = Impulse.ar(speed/trig_div);
+	trig2 = Impulse.ar(speed/trig2_div);
+
+	gift = Stepper.ar(trig:trig2, min:gift_min, max:gift_max, step:gift_step);
+	freq = Stepper.ar(trig:trig, min:freq_min, max:freq_max, step:freq_step);
+
+	amp = LFNoise0.kr(amp_noise_rate-gift, amp_noise_mul, amp_noise_add);
+	amp2 = LFNoise0.kr(amp2_noise_rate-gift, amp2_noise_mul);
+	rq = LFNoise0.kr(rq_noise_rate-gift, 0.2,  0.2);
+	sound = Pulse.ar(freq-(gift*pulse_freq_mod))*amp;
+
+	res_cutoff = res_cutoff_base +top+(gift*res_cutoff_mod)-(Lag.ar(freq, res_cutoff_mod_lag)/res_cutoff_mod_div);
+	filter = Resonz.ar(sound, res_cutoff, rq);
 
 	mod = PulseCount.ar(Trig.ar(filter), trig2);
-	Pan2.ar(RHPF.ar(filter, Lag.ar(mod, Rand(0.02, 6))*Rand(2, 36)+(gift*Rand(2, 6)), rq,  amp2));
+	hpf = RHPF.ar(filter, Lag.ar(mod, Rand(0.02, 6))*Rand(2, 36)+(gift*Rand(2, 6)), rq, amp2);
+	Pan2.ar(hpf);
 };
 
-s = Server.default;
-f.play(target:s);
+rand_voice_func = {
+	arg target;
+	var synth,
+	speed, top, step,
+	gift_min, gift_max, gift_step,
+	freq_min, freq_max, freq_step;
+	/// ... etc..
+
+	// TODO: randomize
+
+	synth = synth_func.play(
+		// args: [...],
+		target:target);
+	synth
+};
+
+rand_voice_func.value(Server.default);
 
 )
