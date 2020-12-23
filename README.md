@@ -1,0 +1,1 @@
+sources for micro-workshop on supercollider intrument structure
