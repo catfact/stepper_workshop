@@ -1,6 +1,8 @@
 // v2: factor out `Rand`s to synthdef arguments
 
-// TODO: controlspecs
+// TODO: randomize
+// TODO: controlspecs?
+// TODO: mouse poll?
 
 (
 var synth_func;
@@ -10,8 +12,14 @@ synth_func = {
 	arg speed=50, top=1000, step=1,
 	gift_min=1, gift_max=10, gift_step=1,
 	freq_min=1, freq_max=10, freq_step=1,
+
 	amp_noise_rate = 15, amp_noise_mul = 0.4, amp_noise_add=0.4,
 	amp2_noise_rate = 20, amp2_noise_mul = 0.6,
+
+	hpf_mod_lag = 1,
+	hpf_mod_mul = 20,
+	hpf_gift_mul = 4,
+
 
 	trig_div=3, trig2_div = 4,
 
@@ -37,7 +45,7 @@ synth_func = {
 	filter = Resonz.ar(sound, res_cutoff, rq);
 
 	mod = PulseCount.ar(Trig.ar(filter), trig2);
-	hpf = RHPF.ar(filter, Lag.ar(mod, Rand(0.02, 6))*Rand(2, 36)+(gift*Rand(2, 6)), rq, amp2);
+	hpf = RHPF.ar(filter, Lag.ar(mod, hpf_mod_lag)*hpf_mod_mul+(gift*hpf_gift_mul), rq, amp2);
 	Pan2.ar(hpf);
 };
 

@@ -1,3 +1,5 @@
+// v1: original post
+
 (z = {
     var sound, step, freq, speed, q, amp, gift, sig, trig, trig2, top, filter, amp2, mod;
     speed = MouseX.kr(1,Rand(50,100));
